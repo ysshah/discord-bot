@@ -1,5 +1,4 @@
-dateparser
 discord.py
 google-api-python-client
 google-auth-oauthlib
-selenium
+pytz

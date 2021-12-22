@@ -1,4 +1,5 @@
 from datetime import datetime
+from discord import TextChannel
 import json
 import os
 
@@ -11,12 +12,14 @@ service = build('calendar', 'v3', credentials=credentials)
 def _format(time: datetime) -> str:
   return time.strftime('%a %b %d at %I:%M %p')
 
-def insert(start: datetime, end: datetime, src: str, dst: str, flight_code: str) -> str:
+async def insert(channel: TextChannel, start: datetime, end: datetime, src: str, dst: str, flight_code: str) -> str:
   '''Inserts a flight into the calendar and returns a link to the created event.'''
-  event = service.events().insert(calendarId='yashshah0127@gmail.com', body={
+  body = {
     'summary': f'{src} -> {dst} ({flight_code})',
     'description': f'Departing {src} on {_format(start)}\nArriving at {dst} on {_format(end)}',
-    'start': { 'dateTime': start.isoformat() },
-    'end': { 'dateTime': end.isoformat() },
-  }).execute()
+    'start': { 'dateTime': start.isoformat(), 'timeZone': start.tzinfo.zone },
+    'end': { 'dateTime': end.isoformat(), 'timeZone': end.tzinfo.zone },
+  }
+  await channel.send(f'Creating event with body {body}')
+  event = service.events().insert(calendarId='yashshah0127@gmail.com', body=body).execute()
   return event['htmlLink']

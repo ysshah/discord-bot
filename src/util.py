@@ -1,16 +1,21 @@
-from datetime import datetime, timedelta
-from typing import List
-import re
+from datetime import datetime
+import json
+from os.path import dirname, join, realpath
+from pytz import timezone
 
-import dateparser
-from selenium.webdriver.remote.webelement import WebElement
+AIRPORTS = {}
+with open(join(dirname(realpath(__file__)), 'airports.json'), 'r') as fp:
+  AIRPORTS = json.load(fp)
 
-def get_text(elements: List[WebElement]) -> List[str]:
-  return [element.text for element in elements]
+def parse(time_string: str, src_tz: str) -> datetime:
+  return datetime.fromisoformat(time_string.replace('Z', '+00:00')).astimezone(timezone(src_tz))
 
-def parse(time_string: str, date: str) -> datetime:
-  trimmed_time = time_string.removeprefix('Scheduled ').removesuffix(' (+1)')
-  if re.search(r'\d\d$', trimmed_time):
-    trimmed_time += '00'
-  time = dateparser.parse(date + ' ' + trimmed_time.replace('IST', '+0530'))
-  return time + timedelta(1) if time_string.endswith('(+1)') else time
+def _convert_airports_csv_to_json():
+  '''
+  Converts airports.csv from:
+  https://raw.githubusercontent.com/mborsetti/airportsdata/main/airportsdata/airports.csv
+  '''
+  import pandas as pd
+  df = pd.read_csv('airports.csv')
+  with open('airports.json', 'w') as f:
+    df.dropna()[['icao', 'iata', 'tz']].set_index('icao').to_json(f, orient='index')
