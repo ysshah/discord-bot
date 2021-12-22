@@ -10,10 +10,6 @@ class FlightTest(unittest.IsolatedAsyncioTestCase):
     self.flight = flight.Flight()
     return super().setUp()
 
-  def tearDown(self) -> None:
-    self.flight.close()
-    return super().tearDown()
-
   async def test_save_flight_to_calendar(self):
     channel = AsyncMock()
     await self.flight.save_flight_to_calendar(channel, 'UAE533')
